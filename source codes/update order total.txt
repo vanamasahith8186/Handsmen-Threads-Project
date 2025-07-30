@@ -1,0 +1,22 @@
+trigger OrderTotalTrigger on HandsMen_Order__c (before insert, before update) {
+    Set<Id> productIds = new Set<Id>();
+ 
+    for (HandsMen_Order__c order : Trigger.new) {
+        if (order.HandsMen_Product__c != null) {
+            productIds.add(order.HandsMen_Product__c);
+        }
+    }
+ 
+    Map<Id, HandsMen_Product_c> productMap = new Map<Id, HandsMen_Product_c>(
+        [SELECT Id, Price_c FROM HandsMen_Product_c WHERE Id IN :productIds]
+    );
+ 
+    for (HandsMen_Order__c order : Trigger.new) {
+        if (order.HandsMen_Product_c != null && productMap.containsKey(order.HandsMen_Product_c)) {
+            HandsMen_Product_c product = productMap.get(order.HandsMen_Product_c);
+            if (order.Quantity__c != null) {
+                order.Total_Amount_c = order.Quantityc * product.Price_c;
+            }
+        }
+    }
+}
